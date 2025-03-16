@@ -1,7 +1,0 @@
-streamlit
-akshare
-efinance==0.4.2
-pandas
-numpy
-plotly
-requests
