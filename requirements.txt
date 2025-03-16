@@ -1,0 +1,7 @@
+streamlit
+akshare
+efinance
+pandas
+numpy
+plotly
+requests
