@@ -1,6 +1,6 @@
 import streamlit as st
 import akshare as ak
-import efinance
+import efinance as ef
 import plotly.express as px
 import pandas as pd
 import numpy as np
