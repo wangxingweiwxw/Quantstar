@@ -1,6 +1,0 @@
-streamlit
-akshare>=1.0.0
-plotly
-pandas
-numpy
-requests
