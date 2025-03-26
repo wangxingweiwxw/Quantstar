@@ -167,6 +167,13 @@ def calculate_indicators(df):
     rs = ema_up / ema_down
     df['RSI'] = 100 - (100 / (1 + rs))
     
+    # 计算威廉指标(WR)
+    # 计算21日最高价和最低价
+    high_21 = df['最高'].rolling(window=21).max()
+    low_21 = df['最低'].rolling(window=21).min()
+    # 计算WR
+    df['WR21'] = (high_21 - df['收盘']) / (high_21 - low_21) * 100
+    
     return df
 
 # 绘制K线图
@@ -293,33 +300,27 @@ def create_dataset(dataset, time_step=1):
 
 # 预测股票价格函数
 @st.cache_resource
-def predict_stock_price(stock_data, predict_days=7):
+def predict_stock_price(stock_data, predict_days=30):
     """
     使用LSTM模型预测股票价格
     
     参数:
         stock_data: 包含历史股价的DataFrame
-        predict_days: 预测未来的天数，默认7天
+        predict_days: 预测未来的天数，默认30天
         
     返回:
         预测结果和相关数据的字典
     """
     try:
-        # 只使用最近90天的数据
-        if len(stock_data) > 90:
-            recent_data = stock_data.iloc[-90:].copy()
-        else:
-            recent_data = stock_data.copy()
-            
         # 使用收盘价进行训练和预测
-        closing_prices = recent_data['收盘'].values.reshape(-1, 1)
+        closing_prices = stock_data['收盘'].values.reshape(-1, 1)
         
         # 数据归一化
         scaler = MinMaxScaler(feature_range=(0, 1))
         scaled_data = scaler.fit_transform(closing_prices)
         
         # 准备训练数据
-        time_step = 30  # 使用过去30天的数据预测下一天
+        time_step = 60  # 使用过去60天的数据预测下一天
         X, y = create_dataset(scaled_data, time_step)
         
         # 重塑输入为LSTM需要的格式 [samples, time steps, features]
@@ -366,16 +367,19 @@ def predict_stock_price(stock_data, predict_days=7):
         future_predictions = np.array(future_predictions).reshape(-1, 1)
         predicted_prices = scaler.inverse_transform(future_predictions)
         
-        # 生成未来日期
-        last_date = recent_data['日期'].iloc[-1]
+        # 生成未来日期（确保不重复）
+        last_date = pd.to_datetime(stock_data['日期'].iloc[-1])
         future_dates = []
+        current_date = last_date
         
-        for i in range(1, predict_days + 1):
-            future_date = pd.to_datetime(last_date) + pd.Timedelta(days=i)
-            # 跳过周末
-            while future_date.weekday() >= 5:  # 5是周六，6是周日
-                future_date += pd.Timedelta(days=1)
-            future_dates.append(future_date)
+        while len(future_dates) < predict_days:
+            current_date += pd.Timedelta(days=1)
+            if current_date.weekday() < 5:  # 只添加工作日（周一到周五）
+                future_dates.append(current_date)
+        
+        # 确保日期和预测价格一一对应
+        future_dates = future_dates[:len(predicted_prices)]
+        predicted_prices = predicted_prices[:len(future_dates)]
         
         # 返回结果
         return {
@@ -485,7 +489,7 @@ def main():
             with indicator_col1:
                 selected_indicators = st.multiselect(
                     "选择技术指标",
-                    options=["MACD", "KDJ", "RSI"],
+                    options=["MACD", "KDJ", "RSI", "WR21"],
                     default=["MACD"],
                     key="tech_indicators"
                 )
@@ -587,6 +591,38 @@ def main():
                 )
                 st.plotly_chart(rsi_fig, use_container_width=True)
             
+            # 在技术指标图表部分添加WR21图表
+            if "WR21" in selected_indicators:
+                wr_fig = go.Figure()
+                wr_fig.add_trace(go.Scatter(x=stock_data['日期'], y=stock_data['WR21'], mode='lines', name='WR21'))
+                
+                # 添加参考线
+                wr_fig.add_shape(type="line", x0=stock_data['日期'].iloc[0], y0=20, x1=stock_data['日期'].iloc[-1], y1=20,
+                                  line=dict(color="red", width=1, dash="dash"))
+                wr_fig.add_shape(type="line", x0=stock_data['日期'].iloc[0], y0=80, x1=stock_data['日期'].iloc[-1], y1=80,
+                                  line=dict(color="green", width=1, dash="dash"))
+                
+                wr_fig.update_layout(
+                    title='威廉指标(WR21)', 
+                    height=500,
+                    xaxis=dict(
+                        rangebreaks=[
+                            dict(bounds=["sat", "mon"]),  # 排除周末
+                            dict(values=["2022-01-01", "2022-01-31", "2022-02-01", "2022-02-02", "2022-02-03", 
+                                        "2022-04-05", "2022-05-01", "2022-05-02", "2022-05-03", "2022-05-04", 
+                                        "2022-06-03", "2022-09-10", "2022-09-11", "2022-09-12", "2022-10-01", 
+                                        "2022-10-02", "2022-10-03", "2022-10-04", "2022-10-05", "2022-10-06", "2022-10-07",
+                                        "2023-01-01", "2023-01-02", "2023-01-21", "2023-01-22", "2023-01-23", "2023-01-24", "2023-01-25", "2023-01-26", "2023-01-27",
+                                        "2023-04-05", "2023-04-29", "2023-04-30", "2023-05-01", "2023-05-02", "2023-05-03",
+                                        "2023-06-22", "2023-06-23", "2023-09-29", "2023-09-30", "2023-10-01", "2023-10-02", "2023-10-03", "2023-10-04", "2023-10-05", "2023-10-06",
+                                        "2024-01-01", "2024-02-10", "2024-02-11", "2024-02-12", "2024-02-13", "2024-02-14", "2024-02-15", "2024-02-16", "2024-02-17",
+                                        "2024-04-04", "2024-04-05", "2024-04-06", "2024-05-01", "2024-05-02", "2024-05-03", "2024-05-04", "2024-05-05",
+                                        "2024-06-10", "2024-09-15", "2024-09-16", "2024-09-17", "2024-10-01", "2024-10-02", "2024-10-03", "2024-10-04", "2024-10-05", "2024-10-06", "2024-10-07"])  # 排除假日
+                        ]
+                    )
+                )
+                st.plotly_chart(wr_fig, use_container_width=True)
+            
             # 添加股价预测
             st.subheader("📈 股价预测 (LSTM模型)")
             
@@ -612,10 +648,9 @@ def main():
                         fig = go.Figure()
                         
                         # 添加历史价格
-                        display_days = min(30, len(stock_data))
                         fig.add_trace(go.Scatter(
-                            x=stock_data['日期'][-display_days:],  # 显示最近30天历史数据
-                            y=stock_data['收盘'][-display_days:],
+                            x=stock_data['日期'][-30:],  # 显示最近30天历史数据
+                            y=stock_data['收盘'][-30:],
                             mode='lines',
                             name='历史价格',
                             line=dict(color='blue')
@@ -632,7 +667,7 @@ def main():
                         
                         # 设置图表布局
                         fig.update_layout(
-                            title=f'股价预测 (未来{predict_days}天)',
+                            title='股价预测 (LSTM模型)',
                             xaxis_title='日期',
                             yaxis_title='价格',
                             height=400,
@@ -651,7 +686,7 @@ def main():
                             '预测价格': np.round(prediction_results['predicted_prices'], 2)
                         })
                         
-                        # 计算最后一天的预期涨跌幅
+                        # 计算30天后的预期涨跌幅
                         last_price = stock_data['收盘'].iloc[-1]
                         last_pred_price = prediction_results['predicted_prices'][-1]
                         expected_change = (last_pred_price - last_price) / last_price * 100
@@ -660,7 +695,7 @@ def main():
                         col1, col2 = st.columns(2)
                         with col1:
                             st.metric(
-                                f"{predict_days}天后预期价格", 
+                                "30天后预期价格", 
                                 f"¥{last_pred_price:.2f}", 
                                 f"{expected_change:.2f}%", 
                                 delta_color="normal" if expected_change >= 0 else "inverse"
@@ -668,7 +703,7 @@ def main():
                         
                         with col2:
                             st.info("""
-                            **模型说明**：预测基于LSTM深度学习模型，使用过去90天的数据，仅供参考。
+                            **模型说明**：预测基于LSTM深度学习模型，仅供参考。
                             股市受多种因素影响，模型无法预测突发事件和政策变化。
                             """)
                         
