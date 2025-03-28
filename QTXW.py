@@ -191,7 +191,11 @@ def plot_candlestick(df):
         high=df['最高'],
         low=df['最低'],
         close=df['收盘'],
-        name='K线'
+        name='K线',
+        increasing_line_color='red',  # 上涨为红色
+        decreasing_line_color='green',  # 下跌为绿色
+        increasing_fillcolor='red',  # 上涨填充为红色
+        decreasing_fillcolor='green'  # 下跌填充为绿色
     ))
     
     # 添加MA线
