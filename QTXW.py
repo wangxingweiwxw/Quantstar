@@ -197,7 +197,7 @@ def market_analysis(df):
         trend = "盘整"
 
     # 判断市场强度
-    if latest_data['RSI'] > 70:
+    if latest_data['RSI'] > 60:
         market_strength = "强"
     elif latest_data['RSI'] < 30:
         market_strength = "弱"
@@ -550,57 +550,57 @@ def main():
             
             with col1:
                 direction_color = {
-                    "做多": "#90EE90",  # light green
-                    "做空": "#FFB6C1",  # light red
-                    "观望": "#D3D3D3"   # light gray
-                }.get(market_status.get("交易方向", "观望"), "#D3D3D3")
+                    "做多": "#2E8B57",  # dark green
+                    "做空": "#B22222",  # dark red
+                    "观望": "#696969"   # dark grey
+                }.get(market_status.get("交易方向", "观望"), "#696969")
                 
                 st.markdown(f"""
-                <div style="background-color: {direction_color}; padding: 8px; border-radius: 5px; text-align: center; height: 80px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                    <p style="margin: 0; font-size: 0.9rem; font-weight: bold;">交易方向</p>
-                    <p style="margin: 0; font-size: 1.2rem;">{market_status.get("交易方向", "观望")}</p>
+                <div style="background-color: {direction_color}; padding: 8px; border-radius: 5px; text-align: center; height: 80px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                    <p style="margin: 0; font-size: 0.9rem; font-weight: bold; color: white;">交易方向</p>
+                    <p style="margin: 0; font-size: 1.2rem; color: white;">{market_status.get("交易方向", "观望")}</p>
                 </div>
                 """, unsafe_allow_html=True)
             
             with col2:
                 trend_color = {
-                    "上升": "#90EE90",  # light green
-                    "下降": "#FFB6C1",  # light red
-                    "盘整": "#FFFACD"   # light yellow
-                }.get(market_status.get("当前趋势", "盘整"), "#FFFACD")
+                    "上升": "#2E8B57",  # dark green
+                    "下降": "#B22222",  # dark red
+                    "盘整": "#DAA520"   # dark yellow
+                }.get(market_status.get("当前趋势", "盘整"), "#DAA520")
                 
                 st.markdown(f"""
-                <div style="background-color: {trend_color}; padding: 8px; border-radius: 5px; text-align: center; height: 80px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                    <p style="margin: 0; font-size: 0.9rem; font-weight: bold;">当前趋势</p>
-                    <p style="margin: 0; font-size: 1.2rem;">{market_status.get("当前趋势", "盘整")}</p>
+                <div style="background-color: {trend_color}; padding: 8px; border-radius: 5px; text-align: center; height: 80px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                    <p style="margin: 0; font-size: 0.9rem; font-weight: bold; color: white;">当前趋势</p>
+                    <p style="margin: 0; font-size: 1.2rem; color: white;">{market_status.get("当前趋势", "盘整")}</p>
                 </div>
                 """, unsafe_allow_html=True)
             
             with col3:
                 strength_color = {
-                    "强": "#90EE90",     # light green
-                    "中": "#FFFACD",     # light yellow
-                    "弱": "#FFB6C1"      # light red
-                }.get(market_status.get("市场强度", "中"), "#FFFACD")
+                    "强": "#2E8B57",     # dark green
+                    "中": "#DAA520",     # dark yellow
+                    "弱": "#B22222"      # dark red
+                }.get(market_status.get("市场强度", "中"), "#DAA520")
                 
                 st.markdown(f"""
-                <div style="background-color: {strength_color}; padding: 8px; border-radius: 5px; text-align: center; height: 80px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                    <p style="margin: 0; font-size: 0.9rem; font-weight: bold;">市场强度</p>
-                    <p style="margin: 0; font-size: 1.2rem;">{market_status.get("市场强度", "中")}</p>
+                <div style="background-color: {strength_color}; padding: 8px; border-radius: 5px; text-align: center; height: 80px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                    <p style="margin: 0; font-size: 0.9rem; font-weight: bold; color: white;">市场强度</p>
+                    <p style="margin: 0; font-size: 1.2rem; color: white;">{market_status.get("市场强度", "中")}</p>
                 </div>
                 """, unsafe_allow_html=True)
             
             with col4:
                 power_color = {
-                    "强": "#90EE90",    # light green
-                    "中": "#FFFACD",    # light yellow
-                    "弱": "#FFB6C1"     # light red
-                }.get(market_status.get("爆发力", "弱"), "#FFB6C1")
+                    "强": "#2E8B57",    # dark green
+                    "中": "#DAA520",    # dark yellow
+                    "弱": "#B22222"     # dark red
+                }.get(market_status.get("爆发力", "弱"), "#B22222")
                 
                 st.markdown(f"""
-                <div style="background-color: {power_color}; padding: 8px; border-radius: 5px; text-align: center; height: 80px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                    <p style="margin: 0; font-size: 0.9rem; font-weight: bold;">爆发力</p>
-                    <p style="margin: 0; font-size: 1.2rem;">{market_status.get("爆发力", "弱")}</p>
+                <div style="background-color: {power_color}; padding: 8px; border-radius: 5px; text-align: center; height: 80px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                    <p style="margin: 0; font-size: 0.9rem; font-weight: bold; color: white;">爆发力</p>
+                    <p style="margin: 0; font-size: 1.2rem; color: white;">{market_status.get("爆发力", "弱")}</p>
                 </div>
                 """, unsafe_allow_html=True)
             
@@ -750,11 +750,17 @@ def main():
             st.markdown("""
             <style>
             .recommendation-box {
-                background-color: #f0f2f6;
+                background-color: #3A3A3A;
                 border-radius: 10px;
                 padding: 15px;
                 margin-top: 10px;
                 margin-bottom: 20px;
+                color: white;
+            }
+            .recommendation-box h4 {
+                color: white !important;
+                margin-top: 0;
+                margin-bottom: 10px;
             }
             </style>
             """, unsafe_allow_html=True)
@@ -837,12 +843,12 @@ def main():
                         col1, col2 = st.columns([1, 3])
                         with col1:
                             # 根据涨跌幅确定背景颜色
-                            price_color = "#90EE90" if expected_change >= 0 else "#FFB6C1"  # 涨-淡绿色，跌-淡红色
+                            price_color = "#2E8B57" if expected_change >= 0 else "#B22222"  # 涨-深绿色，跌-深红色
                             
                             st.markdown(f"""
-                            <div style="background-color: {price_color}; padding: 8px; border-radius: 5px; text-align: center; height: 80px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                                <p style="margin: 0; font-size: 0.9rem; font-weight: bold;">{predict_days}天后预期价格</p>
-                                <p style="margin: 0; font-size: 1.2rem;">¥{last_pred_price:.2f} ({expected_change:+.2f}%)</p>
+                            <div style="background-color: {price_color}; padding: 8px; border-radius: 5px; text-align: center; height: 80px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.3);">
+                                <p style="margin: 0; font-size: 0.9rem; font-weight: bold; color: white;">{predict_days}天后预期价格</p>
+                                <p style="margin: 0; font-size: 1.2rem; color: white;">¥{last_pred_price:.2f} ({expected_change:+.2f}%)</p>
                             </div>
                             """, unsafe_allow_html=True)
                         
