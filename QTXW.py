@@ -174,7 +174,61 @@ def calculate_indicators(df):
     # 计算WR
     df['WR21'] = (high_21 - df['收盘']) / (high_21 - low_21) * 100
     
+    # 计算成交量比率
+    df['MA5_Volume'] = df['成交量'].rolling(window=5).mean()
+    df['MA10_Volume'] = df['成交量'].rolling(window=10).mean()
+    df['Volume_Ratio'] = df['成交量'] / df['MA10_Volume']
+    
     return df
+
+# 市场趋势分析
+def market_analysis(df):
+    if df.empty:
+        return {}
+    
+    latest_data = df.iloc[-1]
+
+    # 判断当前趋势
+    if latest_data['DIF'] > latest_data['DEA']:
+        trend = "上升"
+    elif latest_data['DIF'] < latest_data['DEA']:
+        trend = "下降"
+    else:
+        trend = "盘整"
+
+    # 判断市场强度
+    if latest_data['RSI'] > 70:
+        market_strength = "强"
+    elif latest_data['RSI'] < 30:
+        market_strength = "弱"
+    else:
+        market_strength = "中"
+
+    # 判断爆发力
+    if 'Volume_Ratio' in latest_data and not pd.isna(latest_data['Volume_Ratio']):
+        if latest_data['Volume_Ratio'] > 1.5:
+            explosive_power = "强"
+        elif latest_data['Volume_Ratio'] > 1.0:
+            explosive_power = "中"
+        else:
+            explosive_power = "弱"
+    else:
+        explosive_power = "弱"
+
+    # 判断交易方向
+    if trend == "上升" and market_strength != "弱":
+        direction = "做多"
+    elif trend == "下降" and market_strength != "强":
+        direction = "做空"
+    else:
+        direction = "观望"
+
+    return {
+        "交易方向": direction,
+        "当前趋势": trend,
+        "市场强度": market_strength,
+        "爆发力": explosive_power
+    }
 
 # 绘制K线图
 def plot_candlestick(df):
@@ -488,6 +542,68 @@ def main():
                 stock_data = pd.DataFrame()
         
         if not stock_data.empty:
+            # 添加市场趋势分析
+            market_status = market_analysis(stock_data)
+            
+            # 创建市场趋势显示行
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                direction_color = {
+                    "做多": "#90EE90",  # light green
+                    "做空": "#FFB6C1",  # light red
+                    "观望": "#D3D3D3"   # light gray
+                }.get(market_status.get("交易方向", "观望"), "#D3D3D3")
+                
+                st.markdown(f"""
+                <div style="background-color: {direction_color}; padding: 8px; border-radius: 5px; text-align: center; height: 80px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <p style="margin: 0; font-size: 0.9rem; font-weight: bold;">交易方向</p>
+                    <p style="margin: 0; font-size: 1.2rem;">{market_status.get("交易方向", "观望")}</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                trend_color = {
+                    "上升": "#90EE90",  # light green
+                    "下降": "#FFB6C1",  # light red
+                    "盘整": "#FFFACD"   # light yellow
+                }.get(market_status.get("当前趋势", "盘整"), "#FFFACD")
+                
+                st.markdown(f"""
+                <div style="background-color: {trend_color}; padding: 8px; border-radius: 5px; text-align: center; height: 80px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <p style="margin: 0; font-size: 0.9rem; font-weight: bold;">当前趋势</p>
+                    <p style="margin: 0; font-size: 1.2rem;">{market_status.get("当前趋势", "盘整")}</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col3:
+                strength_color = {
+                    "强": "#90EE90",     # light green
+                    "中": "#FFFACD",     # light yellow
+                    "弱": "#FFB6C1"      # light red
+                }.get(market_status.get("市场强度", "中"), "#FFFACD")
+                
+                st.markdown(f"""
+                <div style="background-color: {strength_color}; padding: 8px; border-radius: 5px; text-align: center; height: 80px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <p style="margin: 0; font-size: 0.9rem; font-weight: bold;">市场强度</p>
+                    <p style="margin: 0; font-size: 1.2rem;">{market_status.get("市场强度", "中")}</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col4:
+                power_color = {
+                    "强": "#90EE90",    # light green
+                    "中": "#FFFACD",    # light yellow
+                    "弱": "#FFB6C1"     # light red
+                }.get(market_status.get("爆发力", "弱"), "#FFB6C1")
+                
+                st.markdown(f"""
+                <div style="background-color: {power_color}; padding: 8px; border-radius: 5px; text-align: center; height: 80px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <p style="margin: 0; font-size: 0.9rem; font-weight: bold;">爆发力</p>
+                    <p style="margin: 0; font-size: 1.2rem;">{market_status.get("爆发力", "弱")}</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
             # 创建指标选择行
             indicator_col1, indicator_col2 = st.columns(2)
             with indicator_col1:
@@ -630,6 +746,28 @@ def main():
             # 添加股价预测
             st.subheader("📈 股价预测 (LSTM模型)")
             
+            # 添加交易建议区域
+            st.markdown("""
+            <style>
+            .recommendation-box {
+                background-color: #f0f2f6;
+                border-radius: 10px;
+                padding: 15px;
+                margin-top: 10px;
+                margin-bottom: 20px;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+            
+            st.markdown(f"""
+            <div class="recommendation-box">
+                <h4>交易建议</h4>
+                <p>根据当前市场分析，建议采取<b>{market_status.get("交易方向", "观望")}</b>策略。
+                市场处于<b>{market_status.get("当前趋势", "盘整")}</b>趋势，市场强度<b>{market_status.get("市场强度", "中")}</b>，
+                成交量爆发力<b>{market_status.get("爆发力", "弱")}</b>。</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
             # 预测天数选择
             predict_days = st.slider(
                 "选择预测天数", 
@@ -690,24 +828,27 @@ def main():
                             '预测价格': np.round(prediction_results['predicted_prices'], 2)
                         })
                         
-                        # 计算30天后的预期涨跌幅
+                        # 计算预测期末的预期涨跌幅
                         last_price = stock_data['收盘'].iloc[-1]
                         last_pred_price = prediction_results['predicted_prices'][-1]
                         expected_change = (last_pred_price - last_price) / last_price * 100
                         
                         # 显示预期涨跌幅
-                        col1, col2 = st.columns(2)
+                        col1, col2 = st.columns([1, 3])
                         with col1:
-                            st.metric(
-                                "30天后预期价格", 
-                                f"¥{last_pred_price:.2f}", 
-                                f"{expected_change:.2f}%", 
-                                delta_color="normal" if expected_change >= 0 else "inverse"
-                            )
+                            # 根据涨跌幅确定背景颜色
+                            price_color = "#90EE90" if expected_change >= 0 else "#FFB6C1"  # 涨-淡绿色，跌-淡红色
+                            
+                            st.markdown(f"""
+                            <div style="background-color: {price_color}; padding: 8px; border-radius: 5px; text-align: center; height: 80px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                                <p style="margin: 0; font-size: 0.9rem; font-weight: bold;">{predict_days}天后预期价格</p>
+                                <p style="margin: 0; font-size: 1.2rem;">¥{last_pred_price:.2f} ({expected_change:+.2f}%)</p>
+                            </div>
+                            """, unsafe_allow_html=True)
                         
                         with col2:
                             st.info("""
-                            **模型说明**：预测基于LSTM深度学习模型，仅供参考。
+                            **模型说明**：预测基于LSTM深度学习模型，仅供参考。预测结果应结合上方的市场趋势分析，综合判断交易方向。
                             股市受多种因素影响，模型无法预测突发事件和政策变化。
                             """)
                         
